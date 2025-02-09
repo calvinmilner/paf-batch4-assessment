@@ -1,0 +1,16 @@
+Write your Task 2 answers in this file
+
+mongoimport --db bedandbreakfast --collection listings_and_reviews --file D:\All Documents\VISA\vttp_src\paf_assessment_batch4\data\listings.json
+
+db.listings_and_reviews.aggregate([
+    { $match: { country: 'Australia', options: 'i' } },
+    { $out: "listings" }
+])
+
+db.listings_and_reviews.drop()
+
+db.listings.find("reviews").projection({ _id: 1, date: 1, listing_id: 1, reviewer_name: 1, comments: 1})
+
+Task 2.4 WIP
+
+mongoexport --db bedandbreakfast --collection=reviews --out.reviews.csv
