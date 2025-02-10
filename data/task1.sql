@@ -6,17 +6,17 @@ use bedandbreakfast;
 
 create table users(
     email varchar(128),
-    name varchar(128)
+    name varchar(128),
     constraint pk_email_id primary key (email)
-);
+); 
 
 create table bookings(
     booking_id char(8),
     listing_id varchar(20),
     duration int,
-    email varchar(128)
+    email varchar(128),
     constraint pk_booking_id primary key (booking_id),
-    -- constraint chk_email_exist check
+    constraint fk_email_id foreign key (email) references users(email)
 );
 
 create table reviews(
@@ -28,11 +28,7 @@ create table reviews(
     constraint pk_reviews_id primary key (id)
 );
 
-bulk insert users
-from 'D:\All Documents\VISA\vttp_src\paf_assessment_batch4\data\users.csv'
-with (
-    format='csv',
-    firstrow=2,
-    fieldterminator=',',
-    rowterminator='\n'
-);
+LOAD DATA INFILE 'C:/ProgramData/MySQL/MySQL Server 8.4/Uploads/users.csv' INTO TABLE users
+FIELDS TERMINATED BY ',' ENCLOSED BY '"'
+LINES TERMINATED BY '\r\n'
+IGNORE 1 ROWS;

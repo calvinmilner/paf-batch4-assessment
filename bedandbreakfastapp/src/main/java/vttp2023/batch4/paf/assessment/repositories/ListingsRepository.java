@@ -6,6 +6,9 @@ import java.util.Optional;
 import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.MatchOperation;
+import org.springframework.data.mongodb.core.aggregation.ProjectionOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
@@ -27,14 +30,24 @@ public class ListingsRepository {
 	 * inside this comment block
 	 * eg. db.bffs.find({ name: 'fred }) 
 	 * 
-	 * db.listings.find({ country: 'country', address.suburb: $suburb})
+	 * db.listings.aggregate([
+	 * { $match: { "address.country": { $regex: 'australia', $options: 'i'}, "address.suburb": { $nin: ["", null] } }},
+	 * { $project: { _id: "$address.suburb" } }
+	 * ])
 	 *
 	 */
 	public List<String> getSuburbs(String country) {
-		Criteria criteria = Criteria.where("country").is(country);
-		Query query = Query.query(criteria);
-		List<String> results = template.find(query, String.class, "listings");
-		return results;
+		Criteria filterByCountry = Criteria.where("address.country").regex(country, "i")
+		Criteria filterBySuburb = Criteria.where("address.suburb").nin("", null);
+		MatchOperation matchByCountrySuburb = Aggregation.match(new Criteria().andOperator(filterByCountry, filterBySuburb));
+		ProjectionOperation projectFields = Aggregation.project("address.suburb").and("address.suburb").as("_id");
+		Aggregation pipeline = Aggregation.newAggregation(filterByCountry, filterBySuburb, matchByCountrySuburb, projectFields);
+		List<String> results = template.aggregate(pipeline, "listings", String.class);
+		// Criteria criteria = Criteria.where("country").is(country);
+		// Query query = Query.query(criteria);
+		// List<String> results = template.find(query, String.class, "listings");
+		// return results;
+		return null;
 	}
 
 	/*
@@ -42,10 +55,11 @@ public class ListingsRepository {
 	 * inside this comment block
 	 * eg. db.bffs.find({ name: 'fred }) 
 	 * 
-	 * db.listings.find({ address.suburb: '$suburb', duration: { $gte: $duration }, priceRange: { $lte: $priceRange } })
+	 * db.listings.find({ address.suburb: '$suburb', persons: { $gte: 'accommodates' }, duration: { $lte: 'min_nights' }, priceRange: { $lte: 'price' } })
+	 * .projection({_id: 1, name: 1, accommodates: 1, price: 1}).sort(price: -1)
 	 */
 	public List<AccommodationSummary> findListings(String suburb, int persons, int duration, float priceRange) {
-		Criteria criteria = new Criteria().where
+		// Criteria criteria = new Criteria().andOperator(Criteria.where("suburb").is(suburb), Criteria.where(persons))
 		return null;
 	}
 
