@@ -9,12 +9,16 @@ import org.springframework.stereotype.Service;
 import vttp2023.batch4.paf.assessment.models.Accommodation;
 import vttp2023.batch4.paf.assessment.models.AccommodationSummary;
 import vttp2023.batch4.paf.assessment.models.Bookings;
+import vttp2023.batch4.paf.assessment.models.User;
+import vttp2023.batch4.paf.assessment.repositories.BookingsRepository;
 import vttp2023.batch4.paf.assessment.repositories.ListingsRepository;
 
 @Service
 public class ListingsService {
 	
 	// You may add additional dependency injections
+	@Autowired
+	private BookingsRepository bookingsRepo;
 
 	@Autowired
 	private ListingsRepository listingsRepo;
@@ -57,6 +61,13 @@ public class ListingsService {
 	// IMPORTANT: DO NOT MODIFY THE SIGNATURE OF THIS METHOD.
 	// You may only add annotations and throw exceptions to this method
 	public void createBooking(Bookings booking) {
+
+		Optional<User> opt = bookingsRepo.userExists(booking.getEmail());
+		if(opt.isEmpty()) {
+			User user = new User(booking.getEmail(), booking.getName());
+			bookingsRepo.newUser(user);
+		}
+		bookingsRepo.newBookings(booking);
 	}
 
 }

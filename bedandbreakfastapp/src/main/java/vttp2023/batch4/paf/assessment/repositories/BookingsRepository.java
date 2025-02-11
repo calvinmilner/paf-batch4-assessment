@@ -33,11 +33,13 @@ public class BookingsRepository {
 	// IMPORTANT: DO NOT MODIFY THE SIGNATURE OF THIS METHOD.
 	// You may only add throw exceptions to this method
 	public void newUser(User user) {
+		template.update("insert into users(email, name) values (?, ?)", user.email(), user.name());
 	}
 
 	// TODO: Task 6
 	// IMPORTANT: DO NOT MODIFY THE SIGNATURE OF THIS METHOD.
 	// You may only add throw exceptions to this method
 	public void newBookings(Bookings bookings) {
+		template.update("insert into bookings(booking_id, listing_id, duration, email) values (?, ?, ?, ?)", bookings.getBookingId(), bookings.getListingId(), bookings.getDuration(), bookings.getEmail());
 	}
 }
