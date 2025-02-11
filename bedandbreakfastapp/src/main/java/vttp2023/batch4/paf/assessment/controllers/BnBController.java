@@ -1,9 +1,11 @@
 package vttp2023.batch4.paf.assessment.controllers;
 
+import java.io.StringReader;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -19,6 +21,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import jakarta.json.Json;
 import jakarta.json.JsonArray;
 import jakarta.json.JsonArrayBuilder;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonReader;
 import vttp2023.batch4.paf.assessment.models.Accommodation;
 import vttp2023.batch4.paf.assessment.models.Bookings;
 import vttp2023.batch4.paf.assessment.services.ListingsService;
@@ -32,7 +36,7 @@ public class BnBController {
 
 	@Autowired
 	private ListingsService listingsSvc;
-	
+
 	// IMPORTANT: DO NOT MODIFY THIS METHOD UNLESS REQUESTED TO DO SO
 	// If this method is changed, any assessment task relying on this method will
 	// not be marked
@@ -43,7 +47,7 @@ public class BnBController {
 		JsonArray result = Json.createArrayBuilder(suburbs).build();
 		return ResponseEntity.ok(result.toString());
 	}
-	
+
 	// IMPORTANT: DO NOT MODIFY THIS METHOD UNLESS REQUESTED TO DO SO
 	// If this method is changed, any assessment task relying on this method will
 	// not be marked
@@ -58,17 +62,14 @@ public class BnBController {
 
 		JsonArrayBuilder arrBuilder = Json.createArrayBuilder();
 		listingsSvc.findAccommodatations(suburb, persons, duration, priceRange)
-			.stream()
-			.forEach(acc -> 
-				arrBuilder.add(
-					Json.createObjectBuilder()
-						.add("id", acc.getId())
-						.add("name", acc.getName())
-						.add("price", acc.getPrice())
-						.add("accommodates", acc.getAccomodates())
-						.build()
-				)
-			);
+				.stream()
+				.forEach(acc -> arrBuilder.add(
+						Json.createObjectBuilder()
+								.add("id", acc.getId())
+								.add("name", acc.getName())
+								.add("price", acc.getPrice())
+								.add("accommodates", acc.getAccomodates())
+								.build()));
 
 		return ResponseEntity.ok(arrBuilder.build().toString());
 	}
@@ -88,17 +89,21 @@ public class BnBController {
 	}
 
 	// TODO: Task 6
-	@PostMapping("/accommodation")
-	@ResponseBody
-	public ResponseEntity<String> postAccommodation(MultiValueMap<String, String> form, @RequestBody String id, @RequestBody int nights) {
+	@PostMapping(path = "/accommodation", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	public ResponseEntity<String> postAccommodation(@RequestBody String payload) {
+		JsonReader reader = Json.createReader(new StringReader(payload));
+		JsonObject j = reader.readObject();
 		Bookings booking = new Bookings();
-		booking.setListingId(id);
-		booking.setName(form.getFirst("name"));
-		booking.setEmail(form.getFirst("email"));
-		booking.setDuration(nights);
-		listingsSvc.createBooking(booking);
-		return ResponseEntity.ok("{}");
+		booking.setName(j.getString("name"));
+		booking.setListingId(j.getString("id"));
+		booking.setEmail(j.getString("email"));
+		booking.setDuration(j.getInt("nights"));
+		try {
+			listingsSvc.createBooking(booking);
+			return ResponseEntity.ok("{}");
+		} catch (Exception ex) {
+			return ResponseEntity.status(HttpStatusCode.valueOf(500)).contentType(MediaType.APPLICATION_JSON)
+					.body("{\"message\": \"" + ex.getMessage() + "\"}");
+		}
 	}
-
-
 }

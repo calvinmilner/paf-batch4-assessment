@@ -15,7 +15,7 @@ import vttp2023.batch4.paf.assessment.repositories.ListingsRepository;
 
 @Service
 public class ListingsService {
-	
+
 	// You may add additional dependency injections
 	@Autowired
 	private BookingsRepository bookingsRepo;
@@ -25,19 +25,18 @@ public class ListingsService {
 
 	@Autowired
 	private ForexService forexSvc;
-	
+
 	// IMPORTANT: DO NOT MODIFY THIS METHOD.
 	// If this method is changed, any assessment task relying on this method will
 	// not be marked
 	public List<String> getAustralianSuburbs() {
 		return listingsRepo.getSuburbs("australia");
 	}
-	
+
 	// IMPORTANT: DO NOT MODIFY THIS METHOD UNLESS REQUESTED TO DO SO
 	// If this method is changed, any assessment task relying on this method will
 	// not be marked
-	public List<AccommodationSummary> findAccommodatations(String suburb, int persons
-			, int duration, float priceRange) {
+	public List<AccommodationSummary> findAccommodatations(String suburb, int persons, int duration, float priceRange) {
 		return listingsRepo.findListings(suburb, persons, duration, priceRange);
 	}
 
@@ -57,17 +56,18 @@ public class ListingsService {
 		return opt;
 	}
 
-	// TODO: Task 6 
+	// TODO: Task 6
 	// IMPORTANT: DO NOT MODIFY THE SIGNATURE OF THIS METHOD.
 	// You may only add annotations and throw exceptions to this method
 	public void createBooking(Bookings booking) {
 
 		Optional<User> opt = bookingsRepo.userExists(booking.getEmail());
-		if(opt.isEmpty()) {
+		if (opt.isEmpty()) {
 			User user = new User(booking.getEmail(), booking.getName());
 			bookingsRepo.newUser(user);
+		} else {
+			bookingsRepo.newBookings(booking);
 		}
-		bookingsRepo.newBookings(booking);
 	}
 
 }

@@ -12,10 +12,10 @@ import vttp2023.batch4.paf.assessment.models.User;
 
 @Repository
 public class BookingsRepository {
-	
+
 	// You may add additional dependency injections
 
-	public static final String SQL_SELECT_USER_BY_EMAIL = "select * from users where email like %";
+	public static final String SQL_SELECT_USER_BY_EMAIL = "select * from users where email like ?";
 
 	@Autowired
 	private JdbcTemplate template;
@@ -40,6 +40,8 @@ public class BookingsRepository {
 	// IMPORTANT: DO NOT MODIFY THE SIGNATURE OF THIS METHOD.
 	// You may only add throw exceptions to this method
 	public void newBookings(Bookings bookings) {
-		template.update("insert into bookings(booking_id, listing_id, duration, email) values (?, ?, ?, ?)", bookings.getBookingId(), bookings.getListingId(), bookings.getDuration(), bookings.getEmail());
+		template.update("insert into bookings(booking_id, listing_id, duration, email) values (?, ?, ?, ?)",
+				bookings.getBookingId(), bookings.getListingId(), bookings.getDuration(), bookings.getEmail());
+
 	}
 }

@@ -11,6 +11,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.aggregation.GroupOperation;
 import org.springframework.data.mongodb.core.aggregation.MatchOperation;
 import org.springframework.data.mongodb.core.aggregation.ProjectionOperation;
 import org.springframework.data.mongodb.core.aggregation.SortOperation;
@@ -35,26 +36,46 @@ public class ListingsRepository {
 	 * inside this comment block
 	 * eg. db.bffs.find({ name: 'fred })
 	 * 
+	 * ORIGINAL IMPLEMENTATION**
+	 * 
 	 * db.listings.aggregate([
 	 * { $match: { "address.country": { $regex: 'country', $options: 'i'},
 	 * "address.suburb": { $nin: ["", null] } }},
 	 * { $project: { _id: "$address.suburb" } }
 	 * ])
 	 *
+	 * CLEANER IMPLEMENTATION*****
+	 * 
+	 * db.listings.aggregate([
+	 * { $match: { "address.country": { $regex: 'country', $options: 'i'},
+	 * "address.suburb": { $nin: ["", null] } }},
+	 * { $group: {_id: "$address.suburb"}}
+	 * ]).sort( { _id: 1 } )
+	 * 
+	 * 
 	 */
 	public List<String> getSuburbs(String country) {
 		Criteria filterByCountry = Criteria.where("address.country").regex(country, "i");
 		Criteria filterBySuburb = Criteria.where("address.suburb").nin("", null);
+
 		MatchOperation matchByCountrySuburb = Aggregation
 				.match(new Criteria().andOperator(filterByCountry, filterBySuburb));
-		ProjectionOperation projectFields = Aggregation.project("address.suburb").and("address.suburb").as("_id");
-		Aggregation pipeline = Aggregation.newAggregation(matchByCountrySuburb, projectFields);
+
+		GroupOperation groupBySuburb = Aggregation.group("address.suburb");
+
+		SortOperation sortBySuburb = Aggregation.sort(Sort.Direction.ASC, "_id");
+
+		// ProjectionOperation projectFields = Aggregation.project("address.suburb").and("address.suburb").as("_id");
+
+		Aggregation pipeline = Aggregation.newAggregation(matchByCountrySuburb, groupBySuburb, sortBySuburb);
+
 		AggregationResults<Document> results = template.aggregate(pipeline, "listings", Document.class);
+		
 		List<String> suburbs = results.getMappedResults().stream().map(doc -> doc.getString("_id"))
 				.collect(Collectors.toList());
-		// for (String s : suburbs) {
-		// 	System.out.printf(">>>>> %s\n", s);
-		// }
+		for (String s : suburbs) {
+			System.out.printf(">>>>> %s\n", s);
+		}
 		return suburbs;
 	}
 
@@ -105,8 +126,9 @@ public class ListingsRepository {
 			s.setName(doc.getString("name"));
 			s.setAccomodates(doc.get("accommodates", Number.class).intValue());
 			s.setPrice(doc.get("price", Number.class).floatValue());
-
+			System.out.printf(">>>>> %s\n", doc.toString());
 			as.add(s);
+			
 		}
 		return as;
 	}
