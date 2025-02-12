@@ -65,6 +65,7 @@ public class ListingsService {
 		if (opt.isEmpty()) {
 			User user = new User(booking.getEmail(), booking.getName());
 			bookingsRepo.newUser(user);
+			bookingsRepo.newBookings(booking);
 		} else {
 			bookingsRepo.newBookings(booking);
 		}
